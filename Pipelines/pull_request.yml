@@ -1,0 +1,32 @@
+pr:
+- main
+
+stages:
+- stage: 'Run_tests'
+  jobs:
+  - job: Tests
+    pool:
+      vmImage: 'windows-2019'
+    continueOnError: 'true'
+    steps:
+
+    - task: PowerShell@2
+      displayName: 'PowerShell: Run Pester tests'
+      inputs:
+        filePath: '$(System.DefaultWorkingDirectory)/Scripts/Invoke-PesterTest.ps1'
+
+    - task: PublishTestResults@2
+      displayName: 'Publish Test Results **\*Results.xml'
+      inputs:
+        testResultsFormat: NUnit
+        testResultsFiles: '$(System.DefaultWorkingDirectory)\*Results.xml'
+
+    - task: PowerShell@2
+      displayName: 'PowerShell: Analyze results'
+      inputs:
+        filePath: '$(System.DefaultWorkingDirectory)/Scripts/Test-PesterResult.ps1'
+    - task: PublishBuildArtifacts@1
+      displayName: 'Publish Artifact: Runbooks'
+      inputs:
+       PathtoPublish: Runbooks
+       ArtifactName: Runbooks

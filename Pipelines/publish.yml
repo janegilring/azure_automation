@@ -1,0 +1,34 @@
+trigger:
+- main
+
+stages:
+- stage: 'Publish_runbooks'
+  jobs:
+  - job: Publish_AzAutomationRunbook
+    pool:
+      vmImage: 'windows-2019'
+    continueOnError: 'true'
+    steps:
+      - task: AzurePowerShell@5
+        displayName: 'Azure PowerShell: Publish-AzAutomationRunbook'
+        inputs:
+          azureSubscription: 'Demo'
+          ScriptType: InlineScript
+          Inline: |
+              $Path = '$(System.DefaultWorkingDirectory)/Runbooks'
+              $AutomationAccount = 'workshop-aa'
+              $ResourceGroup = 'workshop-rg'
+
+              $Files = Get-ChildItem -Path $Path -Recurse | Where-Object {$_.Extension -eq ".ps1"}
+
+              foreach ($file in $files) {
+
+                    $runbookname = $file.BaseName
+                    Write-Host "Publishing $($file.FullName)" -ForegroundColor Green
+
+                    $null = Import-AzAutomationRunbook -Name $runbookname -path $file.FullName -Type PowerShell -Force -ResourceGroupName $ResourceGroup -AutomationAccountName $AutomationAccount -Tags @{'Source'='Azure DevOps'}
+
+                    $null = Publish-AzAutomationRunbook -Name $runbookname -ResourceGroupName $ResourceGroup -AutomationAccountName $AutomationAccount
+
+              }
+          preferredAzurePowerShellVersion: 9.4.0
