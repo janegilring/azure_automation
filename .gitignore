@@ -1,3 +1,1 @@
-#  Local vscode files
-launch.json
-*/.vscode/
+.DS_Store
